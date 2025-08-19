@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { google } from 'googleapis';
+import { getCallbackUrl } from '../../lib/config';
 
 export const GET: APIRoute = async ({ cookies }) => {
     const tokensString = cookies.get('tokens')?.value;
@@ -14,7 +15,7 @@ export const GET: APIRoute = async ({ cookies }) => {
         const oauth2Client = new google.auth.OAuth2(
             import.meta.env.GOOGLE_CLIENT_ID,
             import.meta.env.GOOGLE_CLIENT_SECRET,
-            "http://localhost:4321/api/callback"
+            getCallbackUrl()
         );
         
         oauth2Client.setCredentials(tokens);

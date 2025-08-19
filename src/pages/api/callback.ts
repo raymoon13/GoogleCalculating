@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { google } from 'googleapis';
+import { getCallbackUrl } from '../../lib/config';
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     const code = url.searchParams.get("code");
@@ -11,7 +12,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     const oauth2Client = new google.auth.OAuth2(
         import.meta.env.GOOGLE_CLIENT_ID,
         import.meta.env.GOOGLE_CLIENT_SECRET,
-        "http://localhost:4321/api/callback" // Make sure path matches your route
+        getCallbackUrl() // Make sure path matches your route
     );
 
     try {

@@ -1,7 +1,8 @@
 import { defineAction } from 'astro:actions';
 import { z } from 'astro:schema';
 import { navigate } from 'astro:transitions/client';
-import { google } from 'googleapis'
+import { google } from 'googleapis';
+import { getCallbackUrl } from '../lib/config';
 
 export const server = {
     login: defineAction({
@@ -26,7 +27,7 @@ export const server = {
             const oauth2Client = new google.auth.OAuth2(
                 import.meta.env.GOOGLE_CLIENT_ID,
                 import.meta.env.GOOGLE_CLIENT_SECRET,
-                "http://localhost:4321/api/callback"
+                getCallbackUrl()
             );
 
             console.log("OAuth2 client created");
@@ -59,7 +60,7 @@ export const server = {
             const oauth2Client = new google.auth.OAuth2(
                 import.meta.env.GOOGLE_CLIENT_ID,
                 import.meta.env.GOOGLE_CLIENT_SECRET,
-                "http://localhost:4321/api/callback"
+                getCallbackUrl()
             );
 
             try {
@@ -100,7 +101,7 @@ export const server = {
             const oauth2Client = new google.auth.OAuth2(
                 import.meta.env.GOOGLE_CLIENT_ID,
                 import.meta.env.GOOGLE_CLIENT_SECRET,
-                "http://localhost:4321/api/callback"
+                getCallbackUrl()
             );
             console.log(tokensCookie)
 
