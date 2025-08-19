@@ -1,0 +1,56 @@
+---
+import Welcome from "../components/Welcome.astro";
+import Layout from "../layouts/Layout.astro";
+import { google } from "googleapis";
+// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
+// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+
+const { cookies } = Astro;
+const userCookie = cookies.get("user")?.value;
+const name = userCookie ? JSON.parse(userCookie).name : null;
+---
+
+<Layout>
+	<p>Hi {name}</p>
+	<button id="signin-button">Google</button>
+	<button id="checkdrive-button">Check Drive</button>
+
+	<div id="res"></div>
+</Layout>
+
+<script>
+	import { actions } from "astro:actions";
+
+	const signinButton = document.getElementById(
+		"signin-button",
+	) as HTMLButtonElement;
+
+	signinButton.addEventListener("click", async () => {
+		const response = await actions.login();
+
+		if (response.data) {
+			window.location.href = response.data.url;
+			return;
+		} else {
+			alert("Error");
+		}
+	});
+
+	const checkDriveButton = document.getElementById(
+		"checkdrive-button",
+	) as HTMLButtonElement;
+
+	checkDriveButton.addEventListener("click", async () => {
+		checkDriveButton.disabled = true;
+		const response = await actions.checkDrive();
+		checkDriveButton.disabled = false;
+		console.log(response);
+		const res = document.getElementById("res") as HTMLDivElement;
+		if (response.data) {
+			res.innerHTML = JSON.stringify(response.data, null, 2);
+		} else {
+			res.innerHTML = "Error";
+		}
+
+	});
+</script>
