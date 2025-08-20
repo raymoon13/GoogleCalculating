@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { google } from "googleapis";
 import { getCallbackUrl } from "../../lib/config";
+import { adminApiLimiter, driveApiLimiter, gmailApiLimiter } from "../../lib/rate-limiter";
 
 export const GET: APIRoute = async ({ cookies }) => {
   const tokensString = cookies.get("tokens")?.value;
@@ -40,6 +41,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 
         try {
           // Get all users first
+          await adminApiLimiter.waitForSlot();
           const response = await admin.users.list({
             customer: "my_customer",
             maxResults: 100,
@@ -69,6 +71,7 @@ export const GET: APIRoute = async ({ cookies }) => {
               let nextPageToken = "";
 
               do {
+                await driveApiLimiter.waitForSlot();
                 const pageResponse = await drive.files.list({
                   q: `'${user.primaryEmail}' in owners and trashed=false`,
                   pageSize: 1000,
@@ -97,6 +100,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 
             // Get email count
             try {
+              await gmailApiLimiter.waitForSlot();
               const profile = await gmail.users.getProfile({
                 userId: user.primaryEmail || "me",
               });
