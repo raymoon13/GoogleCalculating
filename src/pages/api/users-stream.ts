@@ -30,8 +30,12 @@ export const GET: APIRoute = async ({ cookies }) => {
         const encoder = new TextEncoder();
 
         const sendEvent = (type: string, data: any) => {
-          const message = `event: ${type}\ndata: ${JSON.stringify(data)}\n\n`;
-          controller.enqueue(encoder.encode(message));
+          try {
+            const message = `event: ${type}\ndata: ${JSON.stringify(data)}\n\n`;
+            controller.enqueue(encoder.encode(message));
+          } catch (error) {
+            console.error("Error sending SSE event:", error);
+          }
         };
 
         try {
@@ -57,10 +61,11 @@ export const GET: APIRoute = async ({ cookies }) => {
             let fileCount = 0;
             let emailCount = 0;
             let totalStorageBytes = 0;
+            let i = 0
 
             // Get file count
             try {
-              let allFiles = [];
+              let allFiles = { totalcount: 0, totalcapacity: 0 };
               let nextPageToken = "";
 
               do {
@@ -71,15 +76,18 @@ export const GET: APIRoute = async ({ cookies }) => {
                   fields: "files(id,size), nextPageToken",
                 });
 
-                allFiles.push(...(pageResponse.data.files || []));
+                allFiles.totalcount += (pageResponse.data.files || []).length;
+                allFiles.totalcapacity += (pageResponse.data.files || []).reduce((sum, file) => {
+                  const size = file.size ? parseInt(file.size, 10) : 0;
+                  return sum + size;
+                }, 0);
                 nextPageToken = pageResponse.data.nextPageToken || "";
               } while (nextPageToken);
 
-              fileCount = allFiles.length;
-              totalStorageBytes = allFiles.reduce((total, file) => {
-                const size = file.size ? parseInt(file.size, 10) : 0;
-                return total + size;
-              }, 0);
+              fileCount = allFiles.totalcount;
+              totalStorageBytes = allFiles.totalcapacity;
+              
+
             } catch (driveErr) {
               console.warn(
                 `Failed to get file count for ${user.primaryEmail}:`,
@@ -105,7 +113,8 @@ export const GET: APIRoute = async ({ cookies }) => {
             const storageGB = storageMB / 1024;
 
             const enhancedUser = {
-              ...user,
+              fullname: user.name?.fullName,
+              primaryEmail: user.primaryEmail,
               fileCount,
               emailCount,
               totalStorageBytes,

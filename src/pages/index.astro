@@ -32,14 +32,19 @@ const user = userCookie ? JSON.parse(userCookie) : null;
 
           <div id="loading" class="loading" style="display: none;">
             <div class="loading-content">
-              <div class="spinner"></div>
+              <div class="spinner" />
               <div class="loading-text">Loading users...</div>
-              <div id="progress-info" class="progress-info" style="display: none;">
+              <div
+                id="progress-info"
+                class="progress-info"
+                style="display: none;"
+              >
                 <div class="progress-bar">
-                  <div id="progress-fill" class="progress-fill"></div>
+                  <div id="progress-fill" class="progress-fill" />
                 </div>
                 <div class="progress-text">
-                  <span id="progress-current">0</span> / <span id="progress-total">0</span> users processed
+                  <span id="progress-current">0</span> /{" "}
+                  <span id="progress-total">0</span> users processed
                 </div>
               </div>
             </div>
@@ -84,7 +89,7 @@ const user = userCookie ? JSON.parse(userCookie) : null;
               />
             </div>
 
-            <div class="users-grid" id="users-grid"></div>
+            <div class="users-grid" id="users-grid" />
           </div>
         </div>
       )
@@ -186,8 +191,12 @@ const user = userCookie ? JSON.parse(userCookie) : null;
   }
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
   .progress-info {
@@ -389,11 +398,7 @@ const user = userCookie ? JSON.parse(userCookie) : null;
   interface User {
     id: string;
     primaryEmail: string;
-    name: {
-      fullName: string;
-      givenName: string;
-      familyName: string;
-    };
+    fullname: string;
     suspended: boolean;
     creationTime: string;
     lastLoginTime?: string;
@@ -409,77 +414,78 @@ const user = userCookie ? JSON.parse(userCookie) : null;
 
   function fetchUsers() {
     allUsers = [];
-    
-    const progressInfo = document.getElementById('progress-info');
-    const progressFill = document.getElementById('progress-fill');
-    const progressCurrent = document.getElementById('progress-current');
-    const progressTotal = document.getElementById('progress-total');
-    const loadingText = document.querySelector('.loading-text');
-    
+
+    const progressInfo = document.getElementById("progress-info");
+    const progressFill = document.getElementById("progress-fill");
+    const progressCurrent = document.getElementById("progress-current");
+    const progressTotal = document.getElementById("progress-total");
+    const loadingText = document.querySelector(".loading-text");
+
     // Show progress info
-    if (progressInfo) progressInfo.style.display = 'block';
-    
-    const eventSource = new EventSource('/api/users-stream');
-    
-    eventSource.addEventListener('start', (event) => {
+    if (progressInfo) progressInfo.style.display = "block";
+
+    const eventSource = new EventSource("/api/users-stream");
+
+    eventSource.addEventListener("start", (event) => {
       const data = JSON.parse(event.data);
       if (progressTotal) progressTotal.textContent = data.totalUsers.toString();
-      if (loadingText) loadingText.textContent = `Processing ${data.totalUsers} users...`;
+      if (loadingText)
+        loadingText.textContent = `Processing ${data.totalUsers} users...`;
     });
-    
-    eventSource.addEventListener('batch', (event) => {
+
+    eventSource.addEventListener("batch", (event) => {
       const data = JSON.parse(event.data);
-      
+
       // Add new users to the array
       allUsers.push(...data.users);
-      
+
       // Update progress
       if (progressFill) {
         const percentage = (data.processedCount / data.totalUsers) * 100;
         progressFill.style.width = `${percentage}%`;
       }
-      if (progressCurrent) progressCurrent.textContent = data.processedCount.toString();
-      
+      if (progressCurrent)
+        progressCurrent.textContent = data.processedCount.toString();
+
       // Update display with all users processed so far
       displayUsers(allUsers);
       updateStats(allUsers.length);
-      
+
       // Show container if first batch
       if (allUsers.length === data.users.length) {
-        const container = document.getElementById('users-container');
-        if (container) container.style.display = 'block';
+        const container = document.getElementById("users-container");
+        if (container) container.style.display = "block";
       }
     });
-    
-    eventSource.addEventListener('complete', () => {
+
+    eventSource.addEventListener("complete", () => {
       eventSource.close();
       hideLoading();
-      
-      if (loadingText) loadingText.textContent = 'Complete!';
+
+      if (loadingText) loadingText.textContent = "Complete!";
       setTimeout(() => {
-        if (progressInfo) progressInfo.style.display = 'none';
+        if (progressInfo) progressInfo.style.display = "none";
       }, 1000);
     });
-    
-    eventSource.addEventListener('error', (event) => {
+
+    eventSource.addEventListener("error", (event) => {
       const messageEvent = event as MessageEvent;
       try {
         const data = JSON.parse(messageEvent.data);
-        showError(data.message || 'Failed to load users');
+        showError(data.message || "Failed to load users");
       } catch {
-        showError('Failed to load users');
+        showError("Failed to load users");
       }
       eventSource.close();
       hideLoading();
     });
-    
+
     eventSource.onerror = () => {
       eventSource.close();
       hideLoading();
-      showError('Connection error occurred');
+      showError("Connection error occurred");
     };
   }
-
 
   function displayUsers(users: User[]) {
     const grid = document.getElementById("users-grid");
@@ -489,13 +495,8 @@ const user = userCookie ? JSON.parse(userCookie) : null;
       .map(
         (user) => `
       <div class="user-card">
-        <div class="user-name">${escapeHtml(user.name?.fullName || "N/A")}</div>
+        <div class="user-name">${escapeHtml(user.fullname || "N/A")}</div>
         <div class="user-email">${escapeHtml(user.primaryEmail)}</div>
-        <div class="user-details">
-          <div>Created: ${formatDate(user.creationTime)}</div>
-          <div>Org Unit: ${escapeHtml(user.orgUnitPath || "N/A")}</div>
-          ${user.lastLoginTime ? `<div>Last Login: ${formatDate(user.lastLoginTime)}</div>` : ""}
-        </div>
         <div class="user-counts">
           <div class="count-item">
             <span class="count-label">Files:</span>
@@ -568,9 +569,7 @@ const user = userCookie ? JSON.parse(userCookie) : null;
     const filteredUsers = allUsers.filter(
       (user) =>
         user.primaryEmail.toLowerCase().includes(query) ||
-        (user.name?.fullName || "").toLowerCase().includes(query) ||
-        (user.name?.givenName || "").toLowerCase().includes(query) ||
-        (user.name?.familyName || "").toLowerCase().includes(query),
+        (user.fullname || "").toLowerCase().includes(query)
     );
 
     displayUsers(filteredUsers);
@@ -645,7 +644,7 @@ const user = userCookie ? JSON.parse(userCookie) : null;
       loadUsersButton.addEventListener("click", () => {
         loadUsersButton.disabled = true;
         loadUsersButton.textContent = "Loading...";
-        
+
         const loadingDiv = document.getElementById("loading");
         if (loadingDiv) {
           loadingDiv.style.display = "block";
