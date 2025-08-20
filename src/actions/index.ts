@@ -132,6 +132,7 @@ export const server = {
                     users.map(async (user) => {
                         let fileCount = 0;
                         let emailCount = 0;
+                        let totalStorageBytes = 0;
 
                         try {
                             // For accurate count, we need to get all files
@@ -143,7 +144,7 @@ export const server = {
                                     q: `'${user.primaryEmail}' in owners and trashed=false`,
                                     pageSize: 1000,
                                     pageToken: nextPageToken || undefined,
-                                    fields: 'files(id), nextPageToken'
+                                    fields: 'files(id,size), nextPageToken'
                                 });
 
                                 allFiles.push(...(pageResponse.data.files || []));
@@ -151,6 +152,10 @@ export const server = {
                             } while (nextPageToken);
 
                             fileCount = allFiles.length;
+                            totalStorageBytes = allFiles.reduce((total, file) => {
+                                const size = file.size ? parseInt(file.size, 10) : 0;
+                                return total + size;
+                            }, 0);
 
                         } catch (driveErr) {
                             console.warn(`Failed to get file count for ${user.primaryEmail}:`, driveErr instanceof Error ? driveErr.message : 'Unknown error');
@@ -168,12 +173,18 @@ export const server = {
                             console.warn(`Failed to get email count for ${user.primaryEmail}:`, gmailErr instanceof Error ? gmailErr.message : 'Unknown error');
                         }
 
-                        console.log(`${user.primaryEmail}: ${fileCount} files, ${emailCount} emails`);
+                        const storageMB = totalStorageBytes / (1024 * 1024);
+                        const storageGB = storageMB / 1024;
+                        
+                        console.log(`${user.primaryEmail}: ${fileCount} files, ${emailCount} emails, ${storageGB.toFixed(2)}GB storage`);
 
                         return {
                             ...user,
                             fileCount,
-                            emailCount
+                            emailCount,
+                            totalStorageBytes,
+                            storageMB: Math.round(storageMB * 100) / 100,
+                            storageGB: Math.round(storageGB * 100) / 100
                         };
                     })
                 );

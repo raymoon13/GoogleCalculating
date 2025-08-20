@@ -61,6 +61,12 @@ const user = userCookie ? JSON.parse(userCookie) : null;
                   </span>
                 </div>
                 <div class="total-item">
+                  <span class="total-label">Total Storage:</span>
+                  <span id="total-storage" class="total-value">
+                    0 GB
+                  </span>
+                </div>
+                <div class="total-item">
                   <span class="total-label">Total Emails:</span>
                   <span id="total-emails" class="total-value">
                     0
@@ -394,6 +400,9 @@ const user = userCookie ? JSON.parse(userCookie) : null;
     orgUnitPath: string;
     fileCount?: number;
     emailCount?: number;
+    totalStorageBytes?: number;
+    storageMB?: number;
+    storageGB?: number;
   }
 
   let allUsers: User[] = [];
@@ -496,6 +505,10 @@ const user = userCookie ? JSON.parse(userCookie) : null;
             <span class="count-label">Emails:</span>
             <span class="count-value">${user.emailCount !== undefined ? user.emailCount.toLocaleString() : "Loading..."}</span>
           </div>
+          <div class="count-item">
+            <span class="count-label">Storage:</span>
+            <span class="count-value">${user.storageGB !== undefined ? user.storageGB.toFixed(2) + " GB" : "Loading..."}</span>
+          </div>
         </div>
         <div class="user-status ${user.suspended ? "status-suspended" : "status-active"}">
           ${user.suspended ? "Suspended" : "Active"}
@@ -514,15 +527,22 @@ const user = userCookie ? JSON.parse(userCookie) : null;
       (sum, user) => sum + (user.emailCount || 0),
       0,
     );
+    const totalStorageGB = users.reduce(
+      (sum, user) => sum + (user.storageGB || 0),
+      0,
+    );
 
     const totalFilesElement = document.getElementById("total-files");
     const totalEmailsElement = document.getElementById("total-emails");
+    const totalStorageElement = document.getElementById("total-storage");
     const totalsSection = document.getElementById("totals-section");
 
     if (totalFilesElement)
       totalFilesElement.textContent = totalFiles.toLocaleString();
     if (totalEmailsElement)
       totalEmailsElement.textContent = totalEmails.toLocaleString();
+    if (totalStorageElement)
+      totalStorageElement.textContent = `${totalStorageGB.toFixed(2)} GB`;
     if (totalsSection) totalsSection.style.display = "block";
 
     const container = document.getElementById("users-container");
